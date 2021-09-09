@@ -5,10 +5,10 @@ import "../../../../libs/math/SafeMath.sol";
 library ECCUtils {
     using SafeMath for uint256;
 
-    uint constant ZION_SEAL_LEN = 67;
+    uint constant ZION_SEAL_LEN = 67; // prefix: 2 , r: 32 , s:32 , v:1
 
     enum Kind { Invalid, Byte, StringShort, StringLong, ListShort, ListLong }
-    
+    /*
     struct ZionHeader {
         bytes32   ParentHash;      
         bytes32   UncleHash;       
@@ -26,7 +26,7 @@ library ECCUtils {
         bytes32   MixDigest;  
         bytes8    Nonce;    
     }
-
+    */
     struct Header {
         bytes    root;
         uint256  number;
@@ -70,8 +70,31 @@ library ECCUtils {
         return hasEnoughSigners(validators, signers);
     }
     
-    // TODO
     function verifySeal(bytes32 headerHash, bytes memory seal) internal pure returns(address signer) {
+        if (seal.length != 65) {
+            return (address(0));
+        }
+
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+
+        assembly {
+            r := mload(add(seal, 0x20))
+            s := mload(add(seal, 0x40))
+            v := byte(0, mload(add(seal, 0x60)))
+        }
+
+        // uncomment codes below if needed
+        // if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
+        //     return address(0);
+        // }
+
+        // if (v != 27 && v != 28) {
+        //     return address(0);
+        // }
+
+        return ecrecover(headerHash, v, r, s);
     }
 
     function hasEnoughSigners(address[] memory _validators, address[] memory _signers) internal pure returns(bool) {
@@ -109,9 +132,18 @@ library ECCUtils {
         (header.number,) = rlpGetNextUint256(rawHeader, offset + size);  // position of Number
     }
     
-    // TODO
+    // []byte("request") = 72657175657374
     function getStorageSlot(CrossTx memory ctx) internal pure returns(bytes memory slotIndex) {
-
+        return bytes32ToBytes(keccak256(abi.encodePacked(bytes7(0x72657175657374), ctx.crossTxParam.toChainId, ctx.txHash)));
+    }
+    
+    function bytes32ToBytes(bytes32 raw) internal pure returns(bytes memory res) {
+        assembly {
+            res := mload(0x40)
+            mstore(0x40,add(res,0x40))
+            mstore(res,0x20)
+            mstore(add(res,0x20),raw)
+        }
     }
     
     function decodeValidators(bytes memory validatorBytes) internal pure returns(address[] memory validators) {

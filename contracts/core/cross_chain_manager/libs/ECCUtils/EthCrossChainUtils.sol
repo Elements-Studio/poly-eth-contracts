@@ -5,28 +5,10 @@ import "../../../../libs/math/SafeMath.sol";
 library ECCUtils {
     using SafeMath for uint256;
 
-    uint constant ZION_SEAL_LEN = 67; // prefix: 2 , r: 32 , s:32 , v:1
+    uint constant ZION_SEAL_LEN = 67; // rlpPrefix: 2 , r: 32 , s:32 , v:1
 
     enum Kind { Invalid, Byte, StringShort, StringLong, ListShort, ListLong }
-    /*
-    struct ZionHeader {
-        bytes32   ParentHash;      
-        bytes32   UncleHash;       
-        address   Coinbase;    
-        bytes32   Root;      // Need      
-        bytes32   TxHash;          
-        bytes32   ReceiptHash;     
-        bytes     Bloom;   // 256 bytes             
-        uint256   Difficulty;        
-        uint256   Number;    // Need      
-        uint64    GasLimit;             
-        uint64    GasUsed;           
-        uint64    Time;      
-        bytes     Extra;                   
-        bytes32   MixDigest;  
-        bytes8    Nonce;    
-    }
-    */
+
     struct Header {
         bytes    root;
         uint256  number;
@@ -117,7 +99,8 @@ library ECCUtils {
             for (uint j = 0; j < _validators.length; j++) {
                 if (_signers[i] == _validators[j]) {
                     m++;
-                    delete _validators[j];
+                    // delete _validators[j];
+                    _validators[j] = 0x7777777777777777777777777777777777777777;
                 }
             }
         }

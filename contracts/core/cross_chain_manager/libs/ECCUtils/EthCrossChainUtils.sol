@@ -99,7 +99,6 @@ library ECCUtils {
             for (uint j = 0; j < _validators.length; j++) {
                 if (_signers[i] == _validators[j]) {
                     m++;
-                    // delete _validators[j];
                     _validators[j] = 0x7777777777777777777777777777777777777777;
                 }
             }

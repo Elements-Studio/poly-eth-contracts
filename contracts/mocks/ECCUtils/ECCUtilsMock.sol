@@ -13,7 +13,7 @@ contract ECCUtilsMock {
     }
 
     function hasEnoughSigners(address[] memory _validators, address[] memory _signers) public pure returns(bool) {
-        ECCUtils.hasEnoughSigners(_validators, _signers);         
+        return ECCUtils.hasEnoughSigners(_validators, _signers);         
     }
     
     function decodeHeader(bytes memory rawHeader) public view returns(bytes memory root, uint256 number) {
@@ -130,20 +130,24 @@ contract ECCUtilsMock {
         return (tmp.txHash, tmp.fromChainID, param);
     }
     
-    function rlpGetNextBytes(bytes memory raw, uint offset) public view returns (bytes memory res, uint _offset){
-        return ECCUtils.rlpGetNextBytes(raw, offset);
+    function rlpGetNextBytes(bytes memory raw, uint offset) public view returns (bytes memory res, uint _offset, bytes memory _raw){
+        (res,_offset) = ECCUtils.rlpGetNextBytes(raw, offset);
+        return (res,_offset,raw);
     } 
     
-    function rlpGetNextBytes32(bytes memory raw, uint offset) public pure returns (bytes32 res, uint _offset){
-        return ECCUtils.rlpGetNextBytes32(raw, offset);
+    function rlpGetNextBytes32(bytes memory raw, uint offset) public pure returns (bytes32 res, uint _offset, bytes memory _raw){
+        (res,_offset) = ECCUtils.rlpGetNextBytes32(raw, offset);
+        return (res,_offset,raw);
     } 
     
-    function rlpGetNextUint64(bytes memory raw, uint offset) public pure returns (uint64 res, uint _offset){
-        return rlpGetNextUint64(raw, offset);
+    function rlpGetNextUint64(bytes memory raw, uint offset) public pure returns (uint64 res, uint _offset, bytes memory _raw){
+        (res,_offset) = ECCUtils.rlpGetNextUint64(raw, offset);
+        return (res,_offset,raw);
     } 
     
-    function rlpGetNextUint256(bytes memory raw, uint offset) public pure returns (uint256 res, uint _offset){
-        return rlpGetNextUint256(raw, offset);
+    function rlpGetNextUint256(bytes memory raw, uint offset) public pure returns (uint256 res, uint _offset, bytes memory _raw){
+        (res,_offset) = ECCUtils.rlpGetNextUint256(raw, offset);
+        return (res,_offset,raw);
     } 
     
     function verifyAccountProof(

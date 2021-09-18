@@ -87,6 +87,7 @@ library ECCUtils {
                 if (_signers[i] == _validators[j]) {
                     m++;
                     _validators[j] = 0x7777777777777777777777777777777777777777;
+                    break;
                 }
             }
         }
@@ -215,11 +216,11 @@ library ECCUtils {
         assembly {
             res := mload(0x40)
             let alloc := add(0x20, mul(0x20, div(add(size,0x1f), 0x20)))
-            mstore(0x40, add(0x20,alloc))
+            mstore(0x40, add(res,alloc))
             mstore(res,size)
             pop(staticcall(gas(),0x4,add(raw,offset), size, add(res,0x20), size))
         }
-    } 
+    }  
     
     // won't change memory
     function rlpGetNextBytes32(bytes memory raw, uint offset) internal pure returns (bytes32 res, uint _offset){
@@ -229,7 +230,7 @@ library ECCUtils {
         _offset = size + offset;
         assembly {
             let pad := sub(0x20,size)
-            res := shl(pad, mload(sub(offset,pad)))
+            res := shl(mul(pad,8), mload(add(raw, sub(offset,pad))))
         }
     } 
     
@@ -241,7 +242,7 @@ library ECCUtils {
         _offset = size + offset;
         assembly {
             let pad := sub(0x20,size)
-            res := shr(pad, shl(pad, mload(sub(offset,pad))))
+            res := shr(mul(pad,8), shl(mul(pad,8), mload(add(raw,sub(offset,pad)))))
         }
     } 
     
@@ -253,7 +254,7 @@ library ECCUtils {
         _offset = size + offset;
         assembly {
             let pad := sub(0x20,size)
-            res := shr(pad, shl(pad, mload(sub(offset,pad))))
+            res := shr(mul(pad,8), shl(mul(pad,8), mload(add(raw,sub(offset,pad)))))
         }
     } 
     
@@ -444,6 +445,7 @@ library ECCUtils {
     // ! will change memory !
     // _buf = i + buf
     function takeOneByte(bytes memory _buf) internal pure returns(bytes memory buf,uint i) {
+        require(_buf.length!=0,"takeOneByte: empty input");
         assembly {
             i := and(mload(add(_buf,1)),0xff)
             mstore(add(_buf,1),sub(mload(_buf),1))

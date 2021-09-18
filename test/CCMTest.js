@@ -145,6 +145,33 @@ describe("CCMtest", async function () {
 
   describe("EthCrossChainManager", function () {
 
+    it("Should fail if not admin try to set implementation", async function () {
+      const CCMMock = await hre.ethers.getContractFactory("CCMMock");
+      let mock = await CCMMock.deploy();
+      await expect(ccmp.connect(addr2).upgradeTo(mock.address)).to.be.reverted;
+    });
+
+    it("Should success if admin try to set implementation", async function () {
+      const CCMMock = await hre.ethers.getContractFactory("CCMMock");
+      let mock = await CCMMock.deploy();
+      let mockccm = await CCMMock.attach(ccm.address);
+      await ccmp.connect(deployer).upgradeTo(mock.address);
+      expect(await mockccm.connect(addr2).iAmMock()).to.equal(true);
+      await ccmp.connect(deployer).upgradeTo(ccmi.address);
+      await expect( mockccm.connect(addr2).iAmMock()).to.be.reverted;
+    });
+
+    it("Should fail if not admin try to change admin", async function () {
+      await expect(ccmp.connect(addr2).changeAdmin(addr2.address)).to.be.reverted;
+    });
+
+    it("Should success if admin try to change admin", async function () {
+      await ccmp.connect(deployer).changeAdmin(addr2.address);
+      await expect(ccmp.connect(deployer).changeAdmin(deployer.address)).to.be.reverted;
+      await ccmp.connect(addr2).changeAdmin(deployer.address);
+    });
+    
+    // TODO
   });
 });
 

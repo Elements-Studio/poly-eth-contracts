@@ -54,3 +54,17 @@ contract CallerSigMsgGen {
         return keccak256(abi.encodePacked(_salt, _logic, _admin, _data, _factory));
     }
 }
+
+contract EthSigMsgGen {
+    function msgToEthSignedMessageHash(bytes memory msg) public pure returns (bytes32) {
+        return toEthSignedMessageHash(hashMsg(msg));
+    }
+
+    function toEthSignedMessageHash(bytes32 hash) public pure returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
+    }
+
+    function hashMsg(bytes memory msg) public pure returns (bytes32) {
+        return keccak256(msg);
+    }
+}

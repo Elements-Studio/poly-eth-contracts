@@ -8,10 +8,10 @@ hre.web3 = new Web3(hre.network.provider);
 
 describe("ECCUtils", function () {
 
-    let ECCUtilsMock;
-    let eccu;
     let empty32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
     let empty20 = '0x0000000000000000000000000000000000000000';
+    let ECCUtilsMock;
+    let eccu;
     let addr1;
     let addr2;
     let addrs;
@@ -75,53 +75,59 @@ describe("ECCUtils", function () {
         });
 
     });
-    
-    // TODO
+
     describe("verifyHeader", function () {
-        let headerHash = 0x1234;
-        let validators = [];
-        let rawSealsValid1 = 0x1234;
-        let rawSealsValid2 = 0x1234;
-        let rawSealsInvalid1 = 0x1234;
-        let rawSealsInvalid2 = 0x1234;
+        // let header = '0xf90271a02b2864068eeb4145b64f4ac04f5f4500e16b758a2b6d1795a7539082656e323ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794258af48e28e4a6846e931ddff8e1cdf8579821e5a0bfc1711d4a46f45c2422bc0c97c3a3e69ab5429b340f4a6f92224bfe0e1fed4da056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010d84fcc4db9f8084614d3d34b87bd983010a04846765746888676f312e31362e328664617277696e000000000000f859f85494258af48e28e4a6846e931ddff8e1cdf8579821e5948c09d936a1b408d6e0afaa537ba4e06c4504a0ae94c095448424a5ecd5ca7ccdadfaad127a9d7e88ec94d47a4e56e9262543db39d9203cf1a2e53735f83480c080a063746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365880000000000000000';
+        let headerHash = '0xcc558e6bf91b122eb2dc5fd68a3ca44198a78f2871c32315436c9afc147b108e';
+        let validators = ['0xD47a4e56e9262543Db39d9203CF1a2e53735f834','0xC095448424A5ECd5cA7CcDaDFaAD127a9d7E88ec','0x8c09D936a1B408D6e0afAA537ba4E06c4504a0AE','0x258af48e28e4a6846e931ddff8e1cdf8579821e5'];
+        let rawSealsValid1 = '0xf8c9b8417857f807dda72d9ab2062305dbc0837291ddd06e4c0faa86b98d644ef3ad48c15c9db9ee68d80175dc007c2724b40508bef467ac29ef98fc924ee5f6e318fe1d00b84157d201dec3551d8333a75ff69c8cce5e991c26c5e7cc0d30fd68512c95034fa65ad3f496967c333de36c19d0d1cf05642106108cd7da4b4ea83a32b125478c6001b84108c2d0c8988a3d0e84eb2385f662fd1469578552a84bc0f354818524a23c6c332b375216998855d143493352a090439de03a98cdad8569bb5af4486916c0143d00';
+        let rawSealsValid2 = '0xf9010cb8417857f807dda72d9ab2062305dbc0837291ddd06e4c0faa86b98d644ef3ad48c15c9db9ee68d80175dc007c2724b40508bef467ac29ef98fc924ee5f6e318fe1d00b84157d201dec3551d8333a75ff69c8cce5e991c26c5e7cc0d30fd68512c95034fa65ad3f496967c333de36c19d0d1cf05642106108cd7da4b4ea83a32b125478c6001b84108c2d0c8988a3d0e84eb2385f662fd1469578552a84bc0f354818524a23c6c332b375216998855d143493352a090439de03a98cdad8569bb5af4486916c0143d00b841460f2f90d7f07fb99c0990ab38d15fc2fd3868239fa0be795db0f5b9240bdbea67ec09cff65cb125a171cb98a5c7c6f55ce0bda8086079dc23f777ebf4fbfc0e00';
+        let rawSealsInvalid1 = '0xf886b8417857f807dda72d9ab2062305dbc0837291ddd06e4c0faa86b98d644ef3ad48c15c9db9ee68d80175dc007c2724b40508bef467ac29ef98fc924ee5f6e318fe1d00b84157d201dec3551d8333a75ff69c8cce5e991c26c5e7cc0d30fd68512c95034fa65ad3f496967c333de36c19d0d1cf05642106108cd7da4b4ea83a32b125478c6001';
+        let rawSealsInvalid2 = '0xf8c9b8417857f807dda72d9ab2062305dbc0837291ddd06e4c0faa86b98d644ef3ad48c15c9db9ee68d80175dc007c2724b40508bef467ac29ef98fc924ee5f6e318fe1d00b84157d201dec3551d8333a75ff69c8cce5e991c26c5e7cc0d30fd68512c95034fa65ad3f496967c333de36c19d0d1cf05642106108cd7da4b4ea83a32b125478c6001b841460f2f90d7f07fb99c0990ab38d15fc2fd3868239fa0be795db0f5b9240bdbea67ec09cff65cb125a171cb98a5c7c6f55ce0bda8086079dc23f777ebf4fbfc0e00';
+        let rawSealsInvalid3 = '0xf8c9b8417857f807dda72d9ab2062305dbc0837291ddd06e4c0faa86b98d644ef3ad48c15c9db9ee68d80175dc007c2724b40508bef467ac29ef98fc924ee5f6e318fe1d00b84157d201dec3551d8333a75ff69c8cce5e991c26c5e7cc0d30fd68512c95034fa65ad3f496967c333de36c19d0d1cf05642106108cd7da4b4ea83a32b125478c6001b8417857f807dda72d9ab2062305dbc0837291ddd06e4c0faa86b98d644ef3ad48c15c9db9ee68d80175dc007c2724b40508bef467ac29ef98fc924ee5f6e318fe1d00';
+        let rawSealsInvalid4 = '0xf9010cb8417857f807dda72d9ab2062305dbc0837291ddd06e4c0faa86b98d644ef3ad48c15c9db9ee68d80175dc007c2724b40508bef467ac29ef98fc924ee5f6e318fe1d00b84157d201dec3551d8333a75ff69c8cce5e991c26c5e7cc0d30fd68512c95034fa65ad3f496967c333de36c19d0d1cf05642106108cd7da4b4ea83a32b125478c6001b8417857f807dda72d9ab2062305dbc0837291ddd06e4c0faa86b98d644ef3ad48c15c9db9ee68d80175dc007c2724b40508bef467ac29ef98fc924ee5f6e318fe1d00b8410000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000';
 
         it("Should return true while there is enough valid seals", async function () {
-        });
-
-        it("Should return false while there is no enough valid seals", async function () {
+            expect(await eccu.verifyHeader(headerHash, rawSealsValid1, validators)).to.equal(true);
         });
 
         it("Should return true while there is fake seals and enough valid seals", async function () {
+            expect(await eccu.verifyHeader(headerHash, rawSealsValid2, validators)).to.equal(true);
+        });
+
+        it("Should return false while there is no enough valid seals", async function () {
+            expect(await eccu.verifyHeader(headerHash, rawSealsInvalid1, validators)).to.equal(false);
         });
 
         it("Should return false while there is fake seals and no enough valid seals", async function () {
+            expect(await eccu.verifyHeader(headerHash, rawSealsInvalid2, validators)).to.equal(false);
+        });
+
+        it("Should return false while there is duplicate seals and no enough valid seals", async function () {
+            expect(await eccu.verifyHeader(headerHash, rawSealsInvalid3, validators)).to.equal(false);
+        });
+
+        it("Should return false while there is invalid seals that ecrecover returns address(0) ", async function () {
+            expect(await eccu.verifyHeader(headerHash, rawSealsInvalid4, validators)).to.equal(false);
         });
 
     });
-    
-    // TODO : TO BE COMFIRMED
-    describe("verifySeal", function () {
-        let header = '0x1234';
-        let headerHash;
-        let seal1;
-        let seal2;
 
-        it("should generate headerHash & sig", async function () {
-            const EthSigMsgGen = await ethers.getContractFactory("EthSigMsgGen");
-            let smg = await EthSigMsgGen.deploy();
-            headerHash = await smg.msgToEthSignedMessageHash(header);
-            let hash = await smg.hashMsg(header);
-            seal1 = await addr1.signMessage(bytes.arrayify(hash));
-            seal2 = await addr2.signMessage(bytes.arrayify(hash)); 
-        })
+    describe("verifySeal", function () {
+
+        let sigHash = '0x50a6ab96d2c065042d6f3867d422fba296b2f0be504548d16276aeffe599a983';
+        let signer1 = '0x258af48e28E4A6846E931dDfF8e1Cdf8579821e5';
+        let signer2 = '0x8c09D936a1B408D6e0afAA537ba4E06c4504a0AE';
+        let seal1 = '0x7857f807dda72d9ab2062305dbc0837291ddd06e4c0faa86b98d644ef3ad48c15c9db9ee68d80175dc007c2724b40508bef467ac29ef98fc924ee5f6e318fe1d00';
+        let seal2 = '0x57d201dec3551d8333a75ff69c8cce5e991c26c5e7cc0d30fd68512c95034fa65ad3f496967c333de36c19d0d1cf05642106108cd7da4b4ea83a32b125478c6001';
 
         it("Should return signer while seal is valid", async function () {
-            expect(await eccu.verifySeal(headerHash, seal1)).to.equal(addr1.address);
-            expect(await eccu.verifySeal(headerHash, seal2)).to.equal(addr2.address);
+            expect(await eccu.verifySeal(sigHash, seal1)).to.equal(signer1);
+            expect(await eccu.verifySeal(sigHash, seal2)).to.equal(signer2);
         });
 
         it("Should return address(0) while seal is invalid", async function () {
-            expect(await eccu.verifySeal(headerHash, empty32)).to.equal(empty20);
+            expect(await eccu.verifySeal(sigHash, empty32+empty32.slice(2)+'00')).to.equal(empty20);
         });
 
     });
@@ -150,26 +156,35 @@ describe("ECCUtils", function () {
         });
 
     });
-    
-    // TODO
+
     describe("decodeHeader", function () {
-        let rawHeader = 0x1234;
-        let root = 0x1234;
-        let number = 0x1234;
+        let rawHeader = '0xf90271a09ba4f263f431924b824b315667fa55a934653b1bc59f2cff8a3f9eaacf45fd0ca01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794258af48e28e4a6846e931ddff8e1cdf8579821e5a0bfc1711d4a46f45c2422bc0c97c3a3e69ab5429b340f4a6f92224bfe0e1fed4da056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b9010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010d84fcc4db9f8084614bf970b87bd983010a04846765746888676f312e31362e328664617277696e000000000000f859f85494258af48e28e4a6846e931ddff8e1cdf8579821e5948c09d936a1b408d6e0afaa537ba4e06c4504a0ae94c095448424a5ecd5ca7ccdadfaad127a9d7e88ec94d47a4e56e9262543db39d9203cf1a2e53735f83480c080a063746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365880000000000000000';
+        let root = '0xbfc1711d4a46f45c2422bc0c97c3a3e69ab5429b340f4a6f92224bfe0e1fed4d';
+        let number = 0xd;
 
         it("Should return block.root and block.number", async function () {
+            let header = await eccu.decodeHeader(rawHeader);
+            expect(header.root).to.equal(root);
+            expect(header.number).to.equal(number);
         });
 
     });
     
-    // TODO
     describe("getStorageSlot", function () {
-        let zionTxHash = 0x1234;
-        let toChainId = 0x1234;
-        let slotIndex = 0x1234;
+        let zionTxHash = '0x422979a53e8fc8c5646d49d382d0f3eb2212c31d0036bca72d8317648e289161';
+        let toChainId = 7;
+        let toChainIdBytes = '0x0700000000000000';
+        let slotIndex = '0xd95ed4f2c92af29e2eb540ec51e62217796ff127986b7d7a737acbd7f18351f3';
+
+        it("Should encode toChainId to bytes8 little endian", async function () {
+            let num = 0x123456789ab;
+            let uint64Bytes = '0xab89674523010000'
+            expect(await eccu.getUint64Bytes(num)).to.equal(uint64Bytes);
+            expect(await eccu.getUint64Bytes(toChainId)).to.equal(toChainIdBytes);
+        });
 
         it("Should return correct slot index", async function () {
-
+            expect(await eccu.getStorageSlot(zionTxHash, toChainId)).to.equal(slotIndex);
         });
 
     });
@@ -208,12 +223,11 @@ describe("ECCUtils", function () {
         });
 
     });
-    
-    // TODO
+
     describe("encode & decode", function () {
         // validators
-        let rawValidatorBytes = 0x1234;
-        let validators = [];
+        let rawValidatorBytes = '0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000040000000000000000000000001111111111111111111111111111111111111111000000000000000000000000222222222222222222222222222222222222222200000000000000000000000033333333333333333333333333333333333333330000000000000000000000004444444444444444444444444444444444444444';
+        let validators = ['0x1111111111111111111111111111111111111111','0x2222222222222222222222222222222222222222','0x3333333333333333333333333333333333333333','0x4444444444444444444444444444444444444444'];
 
         // EpochInfo
         let rawEpochInfo = 0x34;
@@ -221,37 +235,57 @@ describe("ECCUtils", function () {
         let epochEndHeight = 2;
         
         // CrossTx
-        let rawCrossTx = 0x12;
-        let ziontxHash = 0x12;
-        let fromChainID = 0x12;
+        let rawCrossTxBytes = '0xf90285a0f09ceb75d0e85322f04adfb5d02a54bccc6c20fc1c0f67e6ec0fc3c8618c79e911b9026000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000000700000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000000000000000001e00000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b4210000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000abcd0000000000000000000000000000000000000000000000000000000000000014258af48e28e4a6846e931ddff8e1cdf8579821e500000000000000000000000000000000000000000000000000000000000000000000000000000000000000148c09d936a1b408d6e0afaa537ba4e06c4504a0ae0000000000000000000000000000000000000000000000000000000000000000000000000000000000000006756e6c6f636b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002063746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365';
+        let zionTxHash = '0xf09ceb75d0e85322f04adfb5d02a54bccc6c20fc1c0f67e6ec0fc3c8618c79e9';
+        let fromChainID = 17;
 
         // TxParam
-        let rawTxParam = 0x12;
-        let sourceTxHash = 0x12;
-        let crossChainId = 0x12;
-        let fromContract = 0x12;
-        let toChainId = 0x12;
-        let toContract = 0x12;
-        let method = 0x12;
-        let arg = 0x12;
+        let rawTxParamBytes = '0x00000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000000700000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000000000000000001e00000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b4210000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000abcd0000000000000000000000000000000000000000000000000000000000000014258af48e28e4a6846e931ddff8e1cdf8579821e500000000000000000000000000000000000000000000000000000000000000000000000000000000000000148c09d936a1b408d6e0afaa537ba4e06c4504a0ae0000000000000000000000000000000000000000000000000000000000000000000000000000000000000006756e6c6f636b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002063746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365';
+        let sourceTxHash = '0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421';
+        let crossChainId = '0x000000000000000000000000000000000000000000000000000000000000abcd';
+        let fromContract = '0x258af48e28e4a6846e931ddff8e1cdf8579821e5';
+        let toChainId = 7;
+        let toContract = '0x8c09d936a1b408d6e0afaa537ba4e06c4504a0ae';
+        let method = '0x756e6c6f636b';
+        let args = '0x63746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365';
 
 
         it("decodeValidators", async function () {
+            let res = await eccu.decodeValidators(rawValidatorBytes);
+            expect(res.length).to.equal(validators.length);
+            for (let i=0;i<res.length;i++) {
+                expect(res[i]).to.equal(validators[i]);
+            }
         });
 
         it("encodeValidators", async function () {
+            expect(await eccu.encodeValidators(validators)).to.equal(rawValidatorBytes);
         });
 
+        // TODO
         it("decodeEpochInfo", async function () {
         });
 
         it("encodeTxParam", async function () {
+            expect(await eccu.encodeTxParam(sourceTxHash,crossChainId,fromContract,toChainId,toContract,method,args)).to.equal(rawTxParamBytes);
         });
 
         it("decodeTxParam", async function () {
+            let res = await eccu.decodeTxParam(rawTxParamBytes);
+            expect(res.sourceTxHash).to.equal(sourceTxHash);
+            expect(res.crossChainId).to.equal(crossChainId);
+            expect(res.fromContract).to.equal(fromContract);
+            expect(res.toChainId).to.equal(toChainId);
+            expect(res.toContract).to.equal(toContract);
+            expect(res.method).to.equal(method);
+            expect(res.args).to.equal(args);
         });
 
         it("decodeCrossTx", async function () {
+            let res = await eccu.decodeCrossTx(rawCrossTxBytes);
+            expect(res.zionTxHash).to.equal(zionTxHash);
+            expect(res.fromChainID).to.equal(fromChainID);
+            expect(res.crossTxParam).to.equal(rawTxParamBytes);
         });
 
     });

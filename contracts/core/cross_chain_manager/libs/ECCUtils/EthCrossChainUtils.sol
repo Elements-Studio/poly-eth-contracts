@@ -37,22 +37,25 @@ library ECCUtils {
     }
     
     // will change memory (rawSeals)
-    function verifyHeader(bytes32 headerHash, bytes memory rawSeals, address[] memory validators) internal pure returns(bool) {
+    function verifyHeader(bytes32 headerHash, bytes memory rawSeals, address[] memory validators) internal view returns(bool) {
         uint offset = 0x20;
         bytes memory seal;
 
-        (rawSeals, offset) = rlpSplit(rawSeals, offset); 
+        (rawSeals,) = rlpSplit(rawSeals, 0x20); 
         uint sealCount = rawSeals.length.div(ZION_SEAL_LEN);
         address[] memory signers = new address[](sealCount);
 
         for (uint i=0; i<sealCount; i++) {
             (seal,offset) = rlpSplit(rawSeals, offset);
-            signers[i] = verifySeal(headerHash, seal);
+            signers[i] = verifySeal(keccak256(abi.encodePacked(headerHash)), seal);
+            if (signers[i] == address(0)) {
+                return false;
+            }
         }
         return hasEnoughSigners(validators, signers);
     }
     
-    function verifySeal(bytes32 headerHash, bytes memory seal) internal pure returns(address signer) {
+    function verifySeal(bytes32 sigHash, bytes memory seal) internal pure returns(address signer) {
         if (seal.length != 65) {
             return (address(0));
         }
@@ -64,7 +67,7 @@ library ECCUtils {
         assembly {
             r := mload(add(seal, 0x20))
             s := mload(add(seal, 0x40))
-            v := byte(0, mload(add(seal, 0x60)))
+            v := add(27, byte(0, mload(add(seal, 0x60))))
         }
 
         // uncomment codes below if needed
@@ -76,7 +79,7 @@ library ECCUtils {
         //     return address(0);
         // }
 
-        return ecrecover(headerHash, v, r, s);
+        return ecrecover(sigHash, v, r, s);
     }
 
     function hasEnoughSigners(address[] memory _validators, address[] memory _signers) internal pure returns(bool) {
@@ -104,7 +107,22 @@ library ECCUtils {
     
     // []byte("request") = 72657175657374
     function getStorageSlot(CrossTx memory ctx) internal pure returns(bytes memory slotIndex) {
-        return bytes32ToBytes(keccak256(abi.encodePacked(bytes7(0x72657175657374), ctx.crossTxParam.toChainId, ctx.txHash)));
+        return bytes32ToBytes(keccak256(abi.encodePacked(bytes7(0x72657175657374), getUint64Bytes(ctx.crossTxParam.toChainId), ctx.txHash)));
+    }
+    
+    // little endian
+    function getUint64Bytes(uint64 num) internal pure returns(bytes8 res) {
+        assembly {
+            res := shl(56, and(num, 0xff))
+            res := add(res, shl(40, and(num, 0xff00)))
+            res := add(res, shl(24, and(num, 0xff0000)))
+            res := add(res, shl(8,  and(num, 0xff000000)))
+            res := add(res, shr(8,  and(num, 0xff00000000)))
+            res := add(res, shr(24, and(num, 0xff0000000000)))
+            res := add(res, shr(40, and(num, 0xff000000000000)))
+            res := add(res, shr(56, num))
+            res := shl(192, res)
+        }
     }
     
     function bytes32ToBytes(bytes32 raw) internal pure returns(bytes memory res) {

@@ -4,7 +4,7 @@ import "../../core/cross_chain_manager/libs/ECCUtils/EthCrossChainUtils.sol";
 
 contract ECCUtilsMock {
     
-    function verifyHeader(bytes32 headerHash, bytes memory rawSeals, address[] memory validators) public pure returns(bool) {
+    function verifyHeader(bytes32 headerHash, bytes memory rawSeals, address[] memory validators) public view returns(bool) {
         return ECCUtils.verifyHeader(headerHash, rawSeals, validators);
     }
     
@@ -38,6 +38,11 @@ contract ECCUtilsMock {
         // ctx.fromChainID = fromChainID;
         ctx.crossTxParam = param;
         return ECCUtils.getStorageSlot(ctx);
+    }
+
+    // little endian
+    function getUint64Bytes(uint64 num) public pure returns(bytes8 res) {
+        return ECCUtils.getUint64Bytes(num);
     }
     
     function bytes32ToBytes(bytes32 raw) public pure returns(bytes memory res) {
@@ -107,7 +112,7 @@ contract ECCUtilsMock {
     }
     
     function decodeCrossTx(bytes memory rawTx) public view returns(
-        bytes memory ZiontxHash,
+        bytes memory zionTxHash,
         uint64 fromChainID,
         bytes memory crossTxParam
         // bytes memory sourceTxHash,

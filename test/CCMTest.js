@@ -9,6 +9,8 @@ hre.web3 = new Web3(hre.network.provider);
 
 describe("CCMtest", async function () {
 
+  let empty32 = '0x0000000000000000000000000000000000000000000000000000000000000000';
+  let empty20 = '0x0000000000000000000000000000000000000000';
   let deployer;
   let addr1;
   let addr2;
@@ -144,7 +146,8 @@ describe("CCMtest", async function () {
   });
 
   describe("EthCrossChainManager", function () {
-
+    
+    // upgradeTo
     it("Should fail if not admin try to set implementation", async function () {
       const CCMMock = await hre.ethers.getContractFactory("CCMMock");
       let mock = await CCMMock.deploy();
@@ -160,7 +163,8 @@ describe("CCMtest", async function () {
       await ccmp.connect(deployer).upgradeTo(ccmi.address);
       await expect( mockccm.connect(addr2).iAmMock()).to.be.reverted;
     });
-
+    
+    // changeAdmin
     it("Should fail if not admin try to change admin", async function () {
       await expect(ccmp.connect(addr2).changeAdmin(addr2.address)).to.be.reverted;
     });
@@ -170,8 +174,75 @@ describe("CCMtest", async function () {
       await expect(ccmp.connect(deployer).changeAdmin(deployer.address)).to.be.reverted;
       await ccmp.connect(addr2).changeAdmin(deployer.address);
     });
+
+    // crossChain
+    it("Should success when try to call crossChain from valid caller (child of factory) ", async function () {
+      let args = "0x123456"
+      let index = await eccd.getEthTxHashIndex();
+      expect(await eccd.getEthTxHash(index)).to.equal(empty32);
+      await expect(caller.lock(args)).to.not.reverted;
+      expect(await eccd.getEthTxHash(index)).to.not.equal(empty32);
+      expect(await eccd.getEthTxHashIndex()).to.equal(index+1);
+    });
+    
+    it("Should fail when try to call crossChain from invalid caller (not child of factory) ", async function () {
+      let args = "0x123456"
+      await calleri.initialize(ccm.address);
+      await expect(calleri.lock(args)).to.be.reverted;
+    });
     
     // TODO
+    // initGenesisBlock
+    it("Should success when try to call initGenesisBlock at uninitialized CCM ", async function () {
+    });
+    
+    // TODO
+    it("Should fail when try to call initGenesisBlock at already initialized CCM ", async function () {
+    });
+
+    // TODO
+    // changeEpoch
+    it("Should success when try to call changeEpoch with correct header & seals & proof & epochInfo ", async function () {
+    });
+    
+    // TODO
+    it("Should fail when try to call changeEpoch with incorrect header ", async function () {
+    });
+    
+    // TODO
+    it("Should fail when try to call changeEpoch with incorrect seals ", async function () {
+    });
+    
+    // TODO
+    it("Should fail when try to call changeEpoch with incorrect proof ", async function () {
+    });
+    
+    // TODO
+    it("Should fail when try to call changeEpoch with incorrect epochInfo ", async function () {
+    });
+
+    // TODO
+    // verifyHeaderAndExecuteTx
+    it("Should success when try to call verifyHeaderAndExecuteTx with correct header & seals & proof & crossTx ", async function () {
+    });
+    
+    // TODO
+    it("Should fail when try to call verifyHeaderAndExecuteTx with incorrect header ", async function () {
+    });
+    
+    // TODO
+    it("Should fail when try to call verifyHeaderAndExecuteTx with incorrect seals ", async function () {
+    });
+    
+    // TODO
+    it("Should fail when try to call verifyHeaderAndExecuteTx with incorrect proof ", async function () {
+    });
+    
+    // TODO
+    it("Should fail when try to call verifyHeaderAndExecuteTx with incorrect crossTx ", async function () {
+    });
+
+
   });
 });
 
@@ -185,8 +256,6 @@ async function updateConst(eccd, callerFactory) {
   'contract Const {\n'+
   '    bytes constant ZionCrossChainManagerAddress = hex"5747C05FF236F8d18BB21Bc02ecc389deF853cae"; \n'+
   '    bytes constant ZionValidaterManagerAddress = hex"A4Bf827047a08510722B2d62e668a72FCCFa232C"; \n'+
-  '    bytes constant CurrentValidatorSetSlot = hex"1111"; \n'+
-  '    bytes constant NextValidatorSetSlot = hex"1111"; \n'+
   '    address constant EthCrossChainDataAddress = '+eccd+'; \n'+
   '    address constant EthCrossChainCallerFactoryAddress = '+callerFactory+'; \n'+
   '    uint constant chainId = '+polyChainId+'; \n}', 

@@ -4,8 +4,10 @@ pragma solidity ^0.5.0;
  * @dev Interface of the EthCrossChainData contract, the implementation is in EthCrossChainData.sol
  */
 interface IEthCrossChainData {
-    function putCurEpochHeight(uint256 startHeight, uint256 endHeight)  external returns (bool);
-    function getCurEpochHeight() external view returns (uint256, uint256) ;
+    function putCurEpochStartHeight(uint64 startHeight) external returns (bool);
+    function getCurEpochStartHeight() external view returns (uint64);
+    function putCurEpochId(uint64 epochId) external returns (bool);
+    function getCurEpochId() external view returns (uint64);
     function putCurEpochValidatorPkBytes(bytes calldata curEpochPkBytes)  external returns (bool);
     function getCurEpochValidatorPkBytes() external view returns (bytes memory);
     function markFromChainTxExist(uint64 fromChainId, bytes32 fromChainTx) external returns (bool);

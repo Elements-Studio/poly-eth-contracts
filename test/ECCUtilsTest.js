@@ -170,7 +170,7 @@ describe("ECCUtils", function () {
 
     });
     
-    describe("getStorageSlot", function () {
+    describe("getCrossTxStorageSlot", function () {
         let zionTxHash = '0x422979a53e8fc8c5646d49d382d0f3eb2212c31d0036bca72d8317648e289161';
         let toChainId = 7;
         let toChainIdBytes = '0x0700000000000000';
@@ -184,7 +184,17 @@ describe("ECCUtils", function () {
         });
 
         it("Should return correct slot index", async function () {
-            expect(await eccu.getStorageSlot(zionTxHash, toChainId)).to.equal(slotIndex);
+            expect(await eccu.getCrossTxStorageSlot(zionTxHash, toChainId)).to.equal(slotIndex);
+        });
+
+    });
+    
+    describe("getEpochInfoStorageSlot", function () {
+        let epochId = 7;
+        let slotIndex = '0x488514fb1eabb3a12071864c785691311eb6bd83cd3f93bdbc64732733d27ffa';
+
+        it("Should return correct slot index", async function () {
+            expect(await eccu.getEpochInfoStorageSlot(epochId)).to.equal(slotIndex);
         });
 
     });
@@ -230,9 +240,10 @@ describe("ECCUtils", function () {
         let validators = ['0x1111111111111111111111111111111111111111','0x2222222222222222222222222222222222222222','0x3333333333333333333333333333333333333333','0x4444444444444444444444444444444444444444'];
 
         // EpochInfo
-        let rawEpochInfo = 0x34;
-        let epochStartHeight = 1;
-        let epochEndHeight = 2;
+        let rawEpochInfo = '0xf9017407f9016ff9016cf859b8423032386664643532643435303538623965313761613861613532346264383262313232636264343233653938343238666362663161333962613934653234353762399460b972656ce08852ab557c28c1104691514d3c2df859b84230333465666133333665303635376362616430623631383236376663353539386231613062393035333763313034663936616538303638363134313266336662633094a4bcb5c594af9a59795e50f65d2f8271c2948b0af859b84230323732656230633563353436613638366630343838316432393564353163383064316434393730653032636632353734386331366461343737636361346534626494b6124991352c2606b8d7b900bda4601bdd19d4f6f859b842303335663261316439316137323936386466643030336338633961623861313838613965623131633364386536396536373963623866306432653830613035646530948459baa3b615af328b339669056b7579d24507684d';
+        let epochStartHeight = 77;
+        let epochId = 7;
+        let peersAddress = ['0x60b972656CE08852ab557c28C1104691514D3C2d','0xa4bCb5C594AF9a59795E50F65d2F8271c2948b0a','0xB6124991352C2606B8d7b900Bda4601bdd19d4f6','0x8459bAA3b615AF328B339669056B7579D2450768'];
         
         // CrossTx
         let rawCrossTxBytes = '0xf90285a0f09ceb75d0e85322f04adfb5d02a54bccc6c20fc1c0f67e6ec0fc3c8618c79e911b9026000000000000000000000000000000000000000000000000000000000000000e000000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000000160000000000000000000000000000000000000000000000000000000000000000700000000000000000000000000000000000000000000000000000000000001a000000000000000000000000000000000000000000000000000000000000001e00000000000000000000000000000000000000000000000000000000000000220000000000000000000000000000000000000000000000000000000000000002056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b4210000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000abcd0000000000000000000000000000000000000000000000000000000000000014258af48e28e4a6846e931ddff8e1cdf8579821e500000000000000000000000000000000000000000000000000000000000000000000000000000000000000148c09d936a1b408d6e0afaa537ba4e06c4504a0ae0000000000000000000000000000000000000000000000000000000000000000000000000000000000000006756e6c6f636b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002063746963616c2062797a616e74696e65206661756c7420746f6c6572616e6365';
@@ -262,8 +273,14 @@ describe("ECCUtils", function () {
             expect(await eccu.encodeValidators(validators)).to.equal(rawValidatorBytes);
         });
 
-        // TODO
         it("decodeEpochInfo", async function () {
+            let res = await eccu.decodeEpochInfo(rawEpochInfo);
+            expect(res.epochStartHeight).to.equal(epochStartHeight);
+            expect(res.epochId).to.equal(epochId);
+            expect(res.validators[0]).to.equal(peersAddress[0]);
+            expect(res.validators[1]).to.equal(peersAddress[1]);
+            expect(res.validators[2]).to.equal(peersAddress[2]);
+            expect(res.validators[3]).to.equal(peersAddress[3]);
         });
 
         it("encodeTxParam", async function () {
@@ -339,6 +356,22 @@ describe("ECCUtils", function () {
             await rlpGetNextBytes32Test('0x000087ffffffffffffff0000',0x22,'0xffffffffffffff00000000000000000000000000000000000000000000000000',0x2a,false); // 7 bytes
             await rlpGetNextBytes32Test('0x0000a0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000',0x22,'0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff',0x43,false); // 32 bytes
             await rlpGetNextBytes32Test('0x0000a1ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000',0x22,0,0,true); // 33 bytes , too long
+        });
+
+        it("rlpGetNextAddress", async function () {
+            let rlpGetNextAddressTest = async function (raw, offset, res, _offset, willRevert) {
+                if (willRevert==true) {
+                    await expect(eccu.rlpGetNextAddress(raw,offset)).to.be.reverted;
+                    return
+                }
+                let output = await eccu.rlpGetNextAddress(raw,offset);
+                expect(output.res).to.equal(res);
+                expect(output._offset).to.equal(_offset);
+                expect(output._raw).to.equal(raw);
+            }
+            await rlpGetNextAddressTest('0x000086ffffffffffff0000',0x22,'0x0000000000000000000000000000fFfffFFfFfff',0x29,false); // 6 bytes
+            await rlpGetNextAddressTest('0x000094ffffffffffffffffffffffffffffffffffffffff0000',0x22,'0xFFfFfFffFFfffFFfFFfFFFFFffFFFffffFfFFFfF',0x37,false); // 20 bytes
+            await rlpGetNextAddressTest('0x0000a0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff0000',0x22,0,0,true); // 32 bytes , too long
         });
 
         it("rlpGetNextUint64", async function () {

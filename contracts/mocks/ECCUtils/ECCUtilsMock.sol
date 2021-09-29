@@ -4,7 +4,7 @@ import "../../core/cross_chain_manager/libs/ECCUtils/EthCrossChainUtils.sol";
 
 contract ECCUtilsMock {
     
-    function verifyHeader(bytes32 headerHash, bytes memory rawSeals, address[] memory validators) public view returns(bool) {
+    function verifyHeader(bytes32 headerHash, bytes memory rawSeals, address[] memory validators) public pure returns(bool) {
         return ECCUtils.verifyHeader(headerHash, rawSeals, validators);
     }
     
@@ -21,7 +21,7 @@ contract ECCUtilsMock {
         return (header.root, header.number);
     }
     
-    function getStorageSlot(
+    function getCrossTxStorageSlot(
         bytes memory ziontxHash,
         uint64 toChainId
     ) public pure returns(bytes memory slotIndex) {
@@ -37,7 +37,13 @@ contract ECCUtilsMock {
         ctx.txHash = ziontxHash;
         // ctx.fromChainID = fromChainID;
         ctx.crossTxParam = param;
-        return ECCUtils.getStorageSlot(ctx);
+        return ECCUtils.getCrossTxStorageSlot(ctx);
+    }
+
+    function getEpochInfoStorageSlot(uint64 epochId) public pure returns(bytes memory slotIndex) {
+        ECCUtils.EpochInfo memory ei;
+        ei.epochId = epochId;
+        return ECCUtils.getEpochInfoStorageSlot(ei);
     }
 
     // little endian
@@ -78,12 +84,12 @@ contract ECCUtilsMock {
     }
 
     function decodeEpochInfo(bytes memory rawEpochInfo) public pure returns(
-        uint256  epochStartHeight,
-        uint256  epochEndHeight,
+        uint64  epochStartHeight,
+        uint64  epochId,
         address[] memory validators
     ){
         ECCUtils.EpochInfo memory tmp = ECCUtils.decodeEpochInfo(rawEpochInfo);
-        return (tmp.epochStartHeight, tmp.epochEndHeight, tmp.validators);
+        return (tmp.epochStartHeight, tmp.epochId, tmp.validators);
     }
     
     function encodeTxParam(
@@ -142,6 +148,11 @@ contract ECCUtilsMock {
     
     function rlpGetNextBytes32(bytes memory raw, uint offset) public pure returns (bytes32 res, uint _offset, bytes memory _raw){
         (res,_offset) = ECCUtils.rlpGetNextBytes32(raw, offset);
+        return (res,_offset,raw);
+    } 
+    
+    function rlpGetNextAddress(bytes memory raw, uint offset) public pure returns (address res, uint _offset, bytes memory _raw){
+        (res,_offset) = ECCUtils.rlpGetNextAddress(raw, offset);
         return (res,_offset,raw);
     } 
     

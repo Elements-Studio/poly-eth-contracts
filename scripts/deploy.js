@@ -2,56 +2,64 @@ const { ethers } = require("hardhat");
 const hre = require("hardhat");
 const fs = require("fs");
 const Web3 = require("web3");
+const colors = require('colors');
 hre.web3 = new Web3(hre.network.provider);
 
 async function main() {
 
   [deployer] = await hre.ethers.getSigners();
+  
+  // check if given networkId is registered
+  await getPolyChainId().then((polyId) => {
+    console.log("\nDeploy EthCrossChainManager on chain with Poly_Chain_Id:".cyan, polyId);
+  }).catch((error) => {
+    throw error;
+  });;
 
-  console.log("Start , deployer:", deployer.address);
+  console.log("Start , deployer:".cyan, deployer.address.blue);
 
   await hre.run('compile');
   
   // deploy EthCrossChainData
-  console.log("\ndeploy EthCrossChainData ......");
+  console.log("\ndeploy EthCrossChainData ......".cyan);
   const ECCD = await hre.ethers.getContractFactory("EthCrossChainData");
   const eccd = await ECCD.deploy();
   await eccd.deployed();
-  console.log("EthCrossChainData deployed to:", eccd.address);
+  console.log("EthCrossChainData deployed to:".green, eccd.address.blue);
   
   // deploy CallerFactory
-  console.log("\ndeploy CallerFactory ......");
+  console.log("\ndeploy CallerFactory ......".cyan);
   const CallerFactory = await hre.ethers.getContractFactory("CallerFactory");
   const cf = await CallerFactory.deploy();
   await cf.deployed();
-  console.log("CallerFactory deployed to:", cf.address);
+  console.log("CallerFactory deployed to:".green, cf.address.blue);
   
   // update Const.sol
-  console.log("\nupdate Const.sol ......");
+  console.log("\nupdate Const.sol ......".cyan);
   await updateConst(eccd.address, cf.address);
-  console.log("Const.sol updated");
+  console.log("Const.sol updated".green);
   await hre.run('compile');
   
   // deploy EthCrossChainManagerImplemetation
-  console.log("\ndeploy EthCrossChainManagerImplemetation ......");
+  console.log("\ndeploy EthCrossChainManagerImplemetation ......".cyan);
   const CCM = await hre.ethers.getContractFactory("EthCrossChainManagerImplemetation");
   const ccm = await CCM.deploy();
   await ccm.deployed();
-  console.log("EthCrossChainManagerImplemetation deployed to:", ccm.address);
+  console.log("EthCrossChainManagerImplemetation deployed to:".green, ccm.address.blue);
   
   // deploy EthCrossChainManager
-  console.log("\ndeploy EthCrossChainManager ......");
+  console.log("\ndeploy EthCrossChainManager ......".cyan);
   const CCMP = await hre.ethers.getContractFactory("EthCrossChainManager");
   const ccmp = await CCMP.deploy(ccm.address,deployer.address,'0x');
   await ccmp.deployed();
-  console.log("EthCrossChainManager deployed to:", ccmp.address);
+  console.log("EthCrossChainManager deployed to:".green, ccmp.address.blue);
 
   // transfer ownership
-  console.log("\ntransfer eccd's ownership to ccm ......");
+  console.log("\ntransfer eccd's ownership to ccm ......".cyan);
   await eccd.transferOwnership(ccmp.address);
-  console.log("ownership transferred");
+  console.log("ownership transferred".green);
 
-  console.log("\nDone");
+  console.log("\nDone.\n".magenta);
 
 }
 
@@ -63,14 +71,13 @@ async function updateConst(eccd, callerFactory) {
   'contract Const {\n'+
   '    bytes constant ZionCrossChainManagerAddress = hex"5747C05FF236F8d18BB21Bc02ecc389deF853cae"; \n'+
   '    bytes constant ZionValidaterManagerAddress = hex"A4Bf827047a08510722B2d62e668a72FCCFa232C"; \n'+
-  '    bytes constant CurrentValidatorSetSlot = hex"1111"; \n'+
-  '    bytes constant NextValidatorSetSlot = hex"1111"; \n'+
   '    address constant EthCrossChainDataAddress = '+eccd+'; \n'+
   '    address constant EthCrossChainCallerFactoryAddress = '+callerFactory+'; \n'+
   '    uint constant chainId = '+polyChainId+'; \n}', 
   function(err) {
     if (err) {
-        return console.error(err);
+        console.error(err);
+        process.exit(1);
     }
   }); 
 }
@@ -107,9 +114,13 @@ async function getPolyChainId() {
     case 101: // plt-test
       return 107;
 
-    // default/dev
+    // hardhat devnet
+    case 31337:
+      return 77777;
+
+    // unknown chainid
     default: 
-      return 7777;
+      throw new Error("fail to get Poly_Chain_Id, unknown Network_Id: "+chainId);
   }
 }
 

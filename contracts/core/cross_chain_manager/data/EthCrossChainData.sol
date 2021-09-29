@@ -12,22 +12,30 @@ contract EthCrossChainData is IEthCrossChainData, Ownable, Pausable{
 
     bytes public CurValidatorPkBytes;
     
-    uint256 public CurEpochStartHeight;
+    uint64 public CurEpochStartHeight;
 
-    uint256 public CurEpochEndHeight;
+    uint64 public CurEpochId;
     
     mapping(uint64 => mapping(bytes32 => bool)) FromChainTxExist;
     
     mapping(bytes32 => mapping(bytes32 => bytes)) public ExtraData;
     
-    function putCurEpochHeight(uint256 startHeight, uint256 endHeight) public whenNotPaused onlyOwner returns (bool) {
+    function putCurEpochStartHeight(uint64 startHeight) public whenNotPaused onlyOwner returns (bool) {
         CurEpochStartHeight = startHeight;
-        CurEpochEndHeight = endHeight;
         return true;
     }
 
-    function getCurEpochHeight() public view returns (uint256 start, uint256 end) {
-        return (CurEpochStartHeight, CurEpochEndHeight);
+    function getCurEpochStartHeight() public view returns (uint64) {
+        return CurEpochStartHeight;
+    }
+    
+    function putCurEpochId(uint64 epochId) public whenNotPaused onlyOwner returns (bool) {
+        CurEpochId = epochId;
+        return true;
+    }
+
+    function getCurEpochId() public view returns (uint64) {
+        return CurEpochId;
     }
 
     function putCurEpochValidatorPkBytes(bytes memory curEpochPkBytes) public whenNotPaused onlyOwner returns (bool) {

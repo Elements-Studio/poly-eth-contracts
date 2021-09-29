@@ -6,6 +6,7 @@ library ECCUtils {
     using SafeMath for uint256;
 
     uint constant ZION_SEAL_LEN = 67; // rlpPrefix: 2 , r: 32 , s:32 , v:1
+    uint constant ZION_PEER_LEN = 91; // rlpPrefix: 3 , pk_rlp: 67 , address_rlp: 21
 
     enum Kind { Invalid, Byte, StringShort, StringLong, ListShort, ListLong }
 
@@ -31,13 +32,13 @@ library ECCUtils {
     }
 
     struct EpochInfo {
-        uint256   epochStartHeight;
-        uint256   epochEndHeight;
+        uint64   epochId;
+        uint64   epochStartHeight;
         address[] validators;
     }
     
     // will change memory (rawSeals)
-    function verifyHeader(bytes32 headerHash, bytes memory rawSeals, address[] memory validators) internal view returns(bool) {
+    function verifyHeader(bytes32 headerHash, bytes memory rawSeals, address[] memory validators) internal pure returns(bool) {
         uint offset = 0x20;
         bytes memory seal;
 
@@ -97,17 +98,16 @@ library ECCUtils {
         return m >= _m;
     }
     
-    function decodeHeader(bytes memory rawHeader) internal view returns(Header memory header) {
-        (,,uint offset) = rlpReadKind(rawHeader,0x20);
-        (header.root,) = rlpGetNextBytes(rawHeader, offset + 87); // position of Root
-        uint size;
-        (,size,offset) = rlpReadKind(rawHeader, offset + 445); // position of Difficulty
-        (header.number,) = rlpGetNextUint256(rawHeader, offset + size);  // position of Number
-    }
-    
     // []byte("request") = 72657175657374
-    function getStorageSlot(CrossTx memory ctx) internal pure returns(bytes memory slotIndex) {
+    function getCrossTxStorageSlot(CrossTx memory ctx) internal pure returns(bytes memory slotIndex) {
         return bytes32ToBytes(keccak256(abi.encodePacked(bytes7(0x72657175657374), getUint64Bytes(ctx.crossTxParam.toChainId), ctx.txHash)));
+    }
+
+    // []byte("st_proof") = 73745f70726f6f66
+    // EpochProofDigest = e4bf3526f07c80af3a5de1411dd34471c71bdd5d04eedbfa1040da2c96802041
+    function getEpochInfoStorageSlot(EpochInfo memory ei) internal pure returns(bytes memory slotIndex) {
+        bytes32 epochProofHash = keccak256(abi.encodePacked(hex'e4bf3526f07c80af3a5de1411dd34471c71bdd5d04eedbfa1040da2c96802041' ,getUint64Bytes(ei.epochId)));
+        return bytes32ToBytes(keccak256(abi.encodePacked(bytes8(0x73745f70726f6f66),epochProofHash)));
     }
     
     // little endian
@@ -175,6 +175,15 @@ library ECCUtils {
         }
     }
     
+    function decodeHeader(bytes memory rawHeader) internal view returns(Header memory header) {
+        uint size;
+        
+        (,,uint offset) = rlpReadKind(rawHeader,0x20);
+        (header.root,) = rlpGetNextBytes(rawHeader, offset + 87); // position of Root
+        (,size,offset) = rlpReadKind(rawHeader, offset + 445); // position of Difficulty
+        (header.number,) = rlpGetNextUint256(rawHeader, offset + size);  // position of Number
+    }
+    
     function decodeValidators(bytes memory validatorBytes) internal pure returns(address[] memory validators) {
         validators = abi.decode(validatorBytes,(address[]));
     }
@@ -183,8 +192,23 @@ library ECCUtils {
         validatorBytes = abi.encode(validators);
     }
 
-    // TODO
     function decodeEpochInfo(bytes memory rawEpochInfo) internal pure returns(EpochInfo memory info) {
+        uint i = 0;
+        uint size;
+
+        (,,uint offset) = rlpReadKind(rawEpochInfo,0x20);
+        (info.epochId, offset) = rlpGetNextUint64(rawEpochInfo, offset);
+
+        (,, offset) = rlpReadKind(rawEpochInfo, offset);
+        (,size, offset) = rlpReadKind(rawEpochInfo, offset);
+        require(size%ZION_PEER_LEN==0,"invalid rawEpochInfo");
+        info.validators = new address[](size/ZION_PEER_LEN);
+        for (;offset<size;offset+=ZION_PEER_LEN) {
+            (address peerAddr,) = rlpGetNextAddress(rawEpochInfo, offset+70);
+            info.validators[i++] = peerAddr;
+        }
+
+        (info.epochStartHeight,) = rlpGetNextUint64(rawEpochInfo, offset);
     }
     
     function encodeTxParam(
@@ -249,6 +273,18 @@ library ECCUtils {
         assembly {
             let pad := sub(0x20,size)
             res := shl(mul(pad,8), mload(add(raw, sub(offset,pad))))
+        }
+    } 
+    
+    // won't change memory
+    function rlpGetNextAddress(bytes memory raw, uint offset) internal pure returns (address res, uint _offset){
+        uint size;
+        (,size,offset) = rlpReadKind(raw, offset);
+        require(size<=0x14,"rlpGetNextAddress: data longer than 20 bytes");
+        _offset = size + offset;
+        assembly {
+            let pad := sub(0x20,size)
+            res := shr(mul(pad,8), shl(mul(pad,8), mload(add(raw,sub(offset,pad)))))
         }
     } 
     

@@ -21,8 +21,6 @@ contract EthCrossChainManagerImplemetation is Const {
     // address constant EthCrossChainCallerFactoryAddress = 0x0000000000000000000000000000000000000000;
     // bytes constant ZionCrossChainManagerAddress = "0x000000000000000000000000000000000000000000";
     // bytes constant ZionValidaterManagerAddress = "0x000000000000000000000000000000000000000000";
-    // bytes constant CurrentValidatorSetSlot = "0x000000000000000000000000000000000000000000";
-    // bytes constant NextValidatorSetSlot = "0x000000000000000000000000000000000000000000";
     // uint constant chainId = 0;
     
     function initGenesisBlock(
@@ -40,17 +38,21 @@ contract EthCrossChainManagerImplemetation is Const {
         require(eccd.getCurEpochValidatorPkBytes().length == 0, "EthCrossChainData contract has already been initialized!");
         
         // verify block.height
-        require(header.number>=curEpoch.epochStartHeight && header.number<curEpoch.epochEndHeight, "Invalid block height");
+        require(header.number>=curEpoch.epochStartHeight, "Invalid block height");
         
         // verify header
         require(ECCUtils.verifyHeader(keccak256(rawHeader), rawSeals, curEpoch.validators), "Verify header failed");
+
+        // get epoch info hash storage index
+        bytes memory epochInfoSlotIndex = ECCUtils.getEpochInfoStorageSlot(curEpoch);
         
         // verify proof
-        bytes memory storageValue = ECCUtils.verifyAccountProof(accountProof, header.root, ZionValidaterManagerAddress, storageProof, CurrentValidatorSetSlot);
+        bytes memory storageValue = ECCUtils.verifyAccountProof(accountProof, header.root, ZionValidaterManagerAddress, storageProof, epochInfoSlotIndex);
         require(ECCUtils.bytesToBytes32(storageValue) == keccak256(currentEpochInfo), "Verify proof failed");
         
         // put epoch information
-        require(eccd.putCurEpochHeight(curEpoch.epochStartHeight, curEpoch.epochEndHeight), "Save Zion current epoch start & end height to Data contract failed!");
+        require(eccd.putCurEpochStartHeight(curEpoch.epochStartHeight), "Save Zion current epoch start height to Data contract failed!");
+        require(eccd.putCurEpochId(curEpoch.epochId), "Save Zion current epoch id to Data contract failed!");
         require(eccd.putCurEpochValidatorPkBytes(ECCUtils.encodeValidators(curEpoch.validators)), "Save Zion current epoch validators to Data contract failed!");
         
         emit InitGenesisBlockEvent(header.number, rawHeader);
@@ -69,20 +71,26 @@ contract EthCrossChainManagerImplemetation is Const {
         IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
         
         // verify block.height
-        (,uint256 curEpochEndHeight) = eccd.getCurEpochHeight();
-        require(header.number==curEpochEndHeight, "Given block height is not epoch end height");
+        require(header.number>=eccd.getCurEpochStartHeight(), "Given block height is lower than current epoch start height");
+
+        // verify epochId
+        require(nextEpoch.epochId==eccd.getCurEpochId()+1, "Given epoch is not the next epoch of current one");
         
         // verify header
         bytes memory curPkBytes = eccd.getCurEpochValidatorPkBytes();
         address[] memory validators = ECCUtils.decodeValidators(curPkBytes);
         require(ECCUtils.verifyHeader(keccak256(rawHeader), rawSeals, validators), "Verify header failed");
+
+        // get epoch info hash storage index
+        bytes memory epochInfoSlotIndex = ECCUtils.getEpochInfoStorageSlot(nextEpoch);
         
         // verify proof
-        bytes memory storageValue = ECCUtils.verifyAccountProof(accountProof, header.root, ZionValidaterManagerAddress, storageProof, NextValidatorSetSlot);
+        bytes memory storageValue = ECCUtils.verifyAccountProof(accountProof, header.root, ZionValidaterManagerAddress, storageProof, epochInfoSlotIndex);
         require(ECCUtils.bytesToBytes32(storageValue) == keccak256(nextEpochInfo), "Verify proof failed");
         
         // put new epoch info
-        require(eccd.putCurEpochHeight(nextEpoch.epochStartHeight, nextEpoch.epochEndHeight), "Save next epoch height to Data contract failed!");
+        require(eccd.putCurEpochStartHeight(nextEpoch.epochStartHeight), "Save Zion next epoch height to Data contract failed!");
+        require(eccd.putCurEpochId(nextEpoch.epochId), "Save Zion next epoch id to Data contract failed!");
         require(eccd.putCurEpochValidatorPkBytes(ECCUtils.encodeValidators(nextEpoch.validators)), "Save Zion next epoch validators to Data contract failed!");
         
         emit ChangeEpochEvent(header.number, rawHeader, curPkBytes, nextEpochInfo);
@@ -95,7 +103,7 @@ contract EthCrossChainManagerImplemetation is Const {
         bytes calldata method, 
         bytes calldata txData
     ) external returns (bool) {
-        
+        require(CallerFactory(EthCrossChainCallerFactoryAddress).isChild(msg.sender), "The caller is child of the caller factory!");
         uint256 txHashIndex = IEthCrossChainData(EthCrossChainDataAddress).getEthTxHashIndex();
         bytes memory paramTxHash = ECCUtils.uint256ToBytes(txHashIndex);
         bytes memory crossChainId = abi.encodePacked(sha256(abi.encodePacked(address(this), paramTxHash)));
@@ -129,16 +137,15 @@ contract EthCrossChainManagerImplemetation is Const {
         IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
         
         address[] memory validators = ECCUtils.decodeValidators(eccd.getCurEpochValidatorPkBytes());
-        (uint256 curEpochStartHeight , uint256 curEpochEndHeight) = eccd.getCurEpochHeight();
         
         // verify block.height
-        require(header.number>=curEpochStartHeight && header.number<curEpochEndHeight, "Invalid block height");
+        require(header.number>=eccd.getCurEpochStartHeight(), "Invalid block height");
         
         // verify header
         require(ECCUtils.verifyHeader(keccak256(rawHeader), rawSeals, validators), "Verify header failed");
         
         // verify proof
-        bytes memory storageIndex = ECCUtils.getStorageSlot(crossTx);
+        bytes memory storageIndex = ECCUtils.getCrossTxStorageSlot(crossTx);
         bytes memory storageValue = ECCUtils.verifyAccountProof(accountProof, header.root, ZionCrossChainManagerAddress, storageProof, storageIndex);
         require(ECCUtils.bytesToBytes32(storageValue) == keccak256(rawCrossTx), "Verify proof failed");
         

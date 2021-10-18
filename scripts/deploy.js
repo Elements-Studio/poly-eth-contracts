@@ -63,6 +63,13 @@ async function main() {
 
 }
 
+function verifyAtEtherscan(address, constructorArguments) {
+  return hre.run("verify:verify", {
+    address: address,
+    constructorArguments: constructorArguments,
+  });
+}
+
 async function updateConst(eccd, callerFactory) {
   const polyChainId = await getPolyChainId();
 

@@ -48,7 +48,7 @@ contract EthCrossChainManagerImplemetation is Const {
         
         // verify proof
         bytes memory storageValue = ECCUtils.verifyAccountProof(accountProof, header.root, ZionValidaterManagerAddress, storageProof, epochInfoSlotIndex);
-        require(ECCUtils.bytesToBytes32(storageValue) == keccak256(currentEpochInfo), "Verify proof failed");
+        require(ECCUtils.checkCacheDBStorage(ECCUtils.bytesToBytes32(storageValue), keccak256(currentEpochInfo)), "Verify proof failed");
         
         // put epoch information
         require(eccd.putCurEpochStartHeight(curEpoch.epochStartHeight), "Save Zion current epoch start height to Data contract failed!");
@@ -72,6 +72,7 @@ contract EthCrossChainManagerImplemetation is Const {
         
         // verify block.height
         require(header.number>=eccd.getCurEpochStartHeight(), "Given block height is lower than current epoch start height");
+        require(header.number==nextEpoch.epochStartHeight-1, "Given block must be the last block of current epoch");
 
         // verify epochId
         require(nextEpoch.epochId==eccd.getCurEpochId()+1, "Given epoch is not the next epoch of current one");
@@ -86,7 +87,7 @@ contract EthCrossChainManagerImplemetation is Const {
         
         // verify proof
         bytes memory storageValue = ECCUtils.verifyAccountProof(accountProof, header.root, ZionValidaterManagerAddress, storageProof, epochInfoSlotIndex);
-        require(ECCUtils.bytesToBytes32(storageValue) == keccak256(nextEpochInfo), "Verify proof failed");
+        require(ECCUtils.checkCacheDBStorage(ECCUtils.bytesToBytes32(storageValue), keccak256(nextEpochInfo)), "Verify proof failed");
         
         // put new epoch info
         require(eccd.putCurEpochStartHeight(nextEpoch.epochStartHeight), "Save Zion next epoch height to Data contract failed!");
@@ -147,7 +148,7 @@ contract EthCrossChainManagerImplemetation is Const {
         // verify proof
         bytes memory storageIndex = ECCUtils.getCrossTxStorageSlot(crossTx);
         bytes memory storageValue = ECCUtils.verifyAccountProof(accountProof, header.root, ZionCrossChainManagerAddress, storageProof, storageIndex);
-        require(ECCUtils.bytesToBytes32(storageValue) == keccak256(rawCrossTx), "Verify proof failed");
+        require(ECCUtils.checkCacheDBStorage(ECCUtils.bytesToBytes32(storageValue), keccak256(rawCrossTx)), "Verify proof failed");
         
         // check & put tx exection information
         require(!eccd.checkIfFromChainTxExist(crossTx.fromChainID, ECCUtils.bytesToBytes32(crossTx.txHash)), "the transaction has been executed!");

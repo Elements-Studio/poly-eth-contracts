@@ -6,7 +6,7 @@ library ECCUtils {
     using SafeMath for uint256;
 
     uint constant ZION_SEAL_LEN = 67; // rlpPrefix: 2 , r: 32 , s:32 , v:1
-    uint constant ZION_PEER_LEN = 91; // rlpPrefix: 3 , pk_rlp: 67 , address_rlp: 21
+    uint constant ZION_PEER_LEN = 93; // rlpPrefix: 2 , pk_rlp: 70 , address_rlp: 21
 
     enum Kind { Invalid, Byte, StringShort, StringLong, ListShort, ListLong }
 
@@ -85,12 +85,13 @@ library ECCUtils {
 
     function hasEnoughSigners(address[] memory _validators, address[] memory _signers) internal pure returns(bool) {
         uint _m = _validators.length.mul(2).div(3).add(1);
+        bool[] memory _checked = new bool[](_validators.length);
         uint m = 0;
         for(uint i = 0; i < _signers.length; i++){
             for (uint j = 0; j < _validators.length; j++) {
-                if (_signers[i] == _validators[j]) {
+                if (!_checked[j] && _signers[i]==_validators[j]) {
                     m++;
-                    _validators[j] = 0x7777777777777777777777777777777777777777;
+                    _checked[j] = true;
                     break;
                 }
             }
@@ -204,7 +205,7 @@ library ECCUtils {
         require(size%ZION_PEER_LEN==0,"invalid rawEpochInfo");
         info.validators = new address[](size/ZION_PEER_LEN);
         for (;offset<size;offset+=ZION_PEER_LEN) {
-            (address peerAddr,) = rlpGetNextAddress(rawEpochInfo, offset+70);
+            (address peerAddr,) = rlpGetNextAddress(rawEpochInfo, offset+72);
             info.validators[i++] = peerAddr;
         }
 
@@ -311,6 +312,12 @@ library ECCUtils {
             res := shr(mul(pad,8), shl(mul(pad,8), mload(add(raw,sub(offset,pad)))))
         }
     } 
+
+    function checkCacheDBStorage(bytes32 storageValue, bytes32 expectHash) internal pure returns (bool isEqual){
+        assembly {
+            isEqual := eq(storageValue, add(0x0100000000000000000000000000000000000000000000000000000000000000, shr(8, expectHash)))
+        }
+    }
     
     /*
     Account Proof
@@ -350,7 +357,7 @@ library ECCUtils {
         (account,) = rlpSplit(account,0x20);
         (,uint offset) = rlpSplit(account,0x20); // nonce
         (,offset) = rlpSplit(account,offset);    // balance
-        (bytes memory stoargeRoot,) = rlpSplit(account,offset);
+        (bytes memory storageRoot,) = rlpSplit(account,offset);
         
         // verify storage proof
         bytes memory _storageKey = _storageIndex;
@@ -358,7 +365,8 @@ library ECCUtils {
             mstore(add(_storageKey,0x20), keccak256(add(_storageKey, 0x20), mload(_storageKey)))
             mstore(_storageKey, 0x20)
         }
-        value = verifyProof(_storageProof, _storageKey, stoargeRoot);
+        value = verifyProof(_storageProof, _storageKey, storageRoot);
+        (value,) = rlpSplit(value, 0x20);
     }
     
     // no copy , parse proof in-place , so if _proof is needed after , back up it.

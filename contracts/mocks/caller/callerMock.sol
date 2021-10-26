@@ -2,7 +2,7 @@ pragma solidity ^0.5.0;
 
 import "../../core/cross_chain_manager/libs/upgradeability/InitializableAdminUpgradeabilityProxy.sol";
 
-contract CallerImplemetationMock {
+contract CallerImplementationMock {
     
     address public ccm;
     bytes4 constant crossChainSelector = 0xbd5cf625; //"crossChain(uint64,bytes,bytes,bytes)": "bd5cf625",
@@ -41,7 +41,7 @@ contract CallerImplemetationMock {
     }
 }
 
-contract CallerImplemetationMock_2 {
+contract CallerImplementationMock_2 {
     
     function whoAmI() public pure returns(uint) {
         return 2;

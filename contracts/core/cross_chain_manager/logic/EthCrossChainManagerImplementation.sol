@@ -9,7 +9,7 @@ import "../caller/EthCrossChainCaller.sol";
 import "../libs/ECCUtils/EthCrossChainUtils.sol";
 import "./../../../libs/math/SafeMath.sol";
 
-contract EthCrossChainManagerImplemetation is Const {
+contract EthCrossChainManagerImplementation is Const {
     using SafeMath for uint256;
 
     event InitGenesisBlockEvent(uint256 height, bytes rawHeader);

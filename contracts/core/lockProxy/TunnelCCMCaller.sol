@@ -1,9 +1,10 @@
 pragma solidity ^0.5.0;
 
 import "./interface/IEthCrossChainManager.sol";
+import "./interface/IEthCrossChainManagerProxy.sol";
 import "./../../libs/utils/Utils.sol";
 
-contract TunnelCCMCaller is IEthCrossChainManager {
+contract TunnelCCMCaller is IEthCrossChainManager, IEthCrossChainManagerProxy {
     
     address private _owner;
     address public realCCM;
@@ -52,6 +53,14 @@ contract TunnelCCMCaller is IEthCrossChainManager {
         callerHashMap[toChainId] = targetCallerHash;
     }
 
+    
+    // interface from poly1.0 EthCrossChainManagerProxy
+    function getEthCrossChainManager() public view returns (address) {
+        return address(this);
+    }
+    
+
+    // interface from poly1.0 EthCrossChainmanager
     function crossChain(
         uint64 _toChainId, 
         bytes calldata _toContract, 

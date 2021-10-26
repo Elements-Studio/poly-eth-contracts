@@ -40,12 +40,12 @@ async function main() {
   console.log("Const.sol updated".green);
   await hre.run('compile');
   
-  // deploy EthCrossChainManagerImplemetation
-  console.log("\ndeploy EthCrossChainManagerImplemetation ......".cyan);
-  const CCM = await hre.ethers.getContractFactory("EthCrossChainManagerImplemetation");
+  // deploy EthCrossChainManagerImplementation
+  console.log("\ndeploy EthCrossChainManagerImplementation ......".cyan);
+  const CCM = await hre.ethers.getContractFactory("EthCrossChainManagerImplementation");
   const ccm = await CCM.deploy();
   await ccm.deployed();
-  console.log("EthCrossChainManagerImplemetation deployed to:".green, ccm.address.blue);
+  console.log("EthCrossChainManagerImplementation deployed to:".green, ccm.address.blue);
   
   // deploy EthCrossChainManager
   console.log("\ndeploy EthCrossChainManager ......".cyan);
@@ -120,6 +120,8 @@ async function getPolyChainId() {
       return 200;
     case 101: // plt-test
       return 107;
+    case 421611: // arbitrum-test
+      return 205;
 
     // hardhat devnet
     case 31337:

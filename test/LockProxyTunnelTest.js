@@ -54,16 +54,13 @@ describe("LockProxyTest", async function () {
   
         tunnelCaller = await TunnelCCMCaller.attach(tunnelCallerAddress);
 
-        const CCMPMock = await ethers.getContractFactory("CCMPMock");
-        ccmpMock = await CCMPMock.deploy(tunnelCaller.address);
-        await ccmpMock.deployed();
     });
 
     it("Should setup contracts", async function () {
         await tunnelCaller.setRealCCM(ccm.address);
         await tunnelCaller.bindCallerHash(chainId, tunnelCaller.address);
 
-        await lockProxy.setManagerProxy(ccmpMock.address);
+        await lockProxy.setManagerProxy(tunnelCaller.address);
         await lockProxy.bindProxyHash(chainId, lockProxy.address);
         await lockProxy.bindAssetHash(empty20, chainId, empty20);
     });

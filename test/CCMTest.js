@@ -43,8 +43,8 @@ describe("CCMtest", async function () {
       await updateConst(eccd.address, factory.address);
       await hre.run('compile');
       
-      // deploy EthCrossChainManagerImplemetation
-      const CCM = await hre.ethers.getContractFactory("EthCrossChainManagerImplemetation");
+      // deploy EthCrossChainManagerImplementation
+      const CCM = await hre.ethers.getContractFactory("EthCrossChainManagerImplementation");
       ccmi = await CCM.deploy();
       await ccmi.deployed();
         
@@ -68,7 +68,7 @@ describe("CCMtest", async function () {
     it("Should deploy caller implemetaion & caller", async function () {
       // deploy caller implementation
       const Caller = await hre.ethers.getContractFactory("EthCrossChainCaller");
-      const CallerMock = await hre.ethers.getContractFactory("CallerImplemetationMock");
+      const CallerMock = await hre.ethers.getContractFactory("CallerImplementationMock");
       calleri = await CallerMock.deploy();
       await calleri.deployed();
       
@@ -125,7 +125,7 @@ describe("CCMtest", async function () {
     });
 
     it("Should success if admin try to set implementation", async function () {
-      const CallerMock2 = await hre.ethers.getContractFactory("CallerImplemetationMock_2");
+      const CallerMock2 = await hre.ethers.getContractFactory("CallerImplementationMock_2");
       calleri2 = await CallerMock2.deploy();
       await calleri2.deployed();
       await callerp.connect(addr1).upgradeTo(calleri2.address);

@@ -3,7 +3,7 @@
 1. Deploy ./data/EthCrossChainData.sol
 2. Deploy ./caller/CallerFactory
 3. Set up constants at ./logic/Const/sol
-4. Deploy ./logic/EthCrossChainManagerImplemetation.sol
+4. Deploy ./logic/EthCrossChainManagerImplementation.sol
 5. Deploy ./upragde/EthCrossChainManager ; set contract address at step 4 as _logic
 
 ## Deploy crossChain project

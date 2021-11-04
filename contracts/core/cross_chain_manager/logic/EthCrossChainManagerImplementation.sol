@@ -23,6 +23,10 @@ contract EthCrossChainManagerImplementation is Const {
     // bytes constant ZionValidaterManagerAddress = "0x000000000000000000000000000000000000000000";
     // uint constant chainId = 0;
     
+    function getZionChainId() public pure returns(uint) {
+        return chainId;
+    }
+    
     function initGenesisBlock(
         bytes memory rawHeader, 
         bytes memory rawSeals,

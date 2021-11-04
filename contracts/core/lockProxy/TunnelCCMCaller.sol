@@ -69,7 +69,7 @@ contract TunnelCCMCaller is IEthCrossChainManager, IEthCrossChainManagerProxy {
     ) external returns (bool) {
 
         bytes memory toCaller = callerHashMap[_toChainId];
-        if (toCaller.length == 0) return false;
+        require(toCaller.length != 0, "empty illegal toCallerHash");
 
         bytes memory tunnelData = abi.encode(Utils.addressToBytes(msg.sender), _toContract, _method, _txData);
 

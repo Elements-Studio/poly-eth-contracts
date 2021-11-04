@@ -63,11 +63,11 @@ async function main() {
     console.log("LockProxy deployed to:".green, lockProxy.address.blue);
 
     // deploy EthCrossChainManagerImplementation
-    console.log("\ndeploy EthCrossChainManagerImplementation ......".cyan);
+    console.log("\ndeploy TunnelCCMCallerImplementation ......".cyan);
     const TunnelCCMCaller = await ethers.getContractFactory("TunnelCCMCaller");
     const tunnelCalleri = await TunnelCCMCaller.deploy();
     await tunnelCalleri.deployed();
-    console.log("EthCrossChainManagerImplementation deployed to:".green, tunnelCalleri.address.blue);
+    console.log("TunnelCCMCallerImplementation deployed to:".green, tunnelCalleri.address.blue);
     
     // deploy TunnelCCMCaller
     console.log("\ndeploy TunnelCCMCaller ......".cyan);

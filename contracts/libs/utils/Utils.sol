@@ -1,5 +1,6 @@
 pragma solidity ^0.5.0;
 
+import "hardhat/console.sol";
 
 library Utils {
 
@@ -84,8 +85,12 @@ library Utils {
     *  @param _data     Data in bytes format
     *  @return          Hashed value in bytes32 format
     */
-    function hashLeaf(bytes memory _data) internal pure returns (bytes32 result)  {
+    function hashLeaf(bytes memory _data) internal view returns (bytes32 result)  {
+        console.log("Utils hashLeaf hash ");
+        console.logBytes(_data);
+        console.logBytes(abi.encodePacked(byte(0x0), _data));
         result = sha256(abi.encodePacked(byte(0x0), _data));
+        console.logBytes32(result);
     }
 
     /* @notice          Do hash children as the multi-chain does
@@ -253,16 +258,23 @@ library Utils {
     *  @param _m            The number requirement paramter
     *  @return              True means containment, false meansdo do not contain.
     */
-    function containMAddresses(address[] memory _keepers, address[] memory _signers, uint _m) internal pure returns (bool){
+    function containMAddresses(address[] memory _keepers, address[] memory _signers, uint _m) internal view returns (bool){
         uint m = 0;
+        console.log("Utils hashLeafcontainMAddresses debug ");
+
         for(uint i = 0; i < _signers.length; i++){
             for (uint j = 0; j < _keepers.length; j++) {
                 if (_signers[i] == _keepers[j]) {
+                    console.log("Utils hashLeafcontainMAddresses _signers[i] == _keepers[j] %s", _signers[i]);
                     m++;
                     delete _keepers[j];
                 }
             }
         }
+//        console.log("Utils hashLeaf hash ");
+//        console.logBytes(_data);
+        console.log("Utils hashLeafcontainMAddresses m %s", m);
+        console.log("Utils hashLeafcontainMAddresses _m %s", _m);
         return m >= _m;
     }
 

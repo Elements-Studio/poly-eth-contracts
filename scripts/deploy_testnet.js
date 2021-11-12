@@ -125,7 +125,7 @@ async function getPolyChainId() {
     case 421611: // arbitrum-test
       return 205;
     case 69: // optimistic-test
-      return 210;
+      return 207;
     case 4002: // ftm-test
         return 208;
     case 43113: // avax-test

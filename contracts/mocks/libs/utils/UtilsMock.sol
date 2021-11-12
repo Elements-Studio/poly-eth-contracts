@@ -26,7 +26,7 @@ contract UtilsMock {
     function addressToBytes(address _v) public pure returns (bytes memory) {
         return Utils.addressToBytes(_v);
     }
-    function hashLeaf(bytes memory _data) public pure returns (bytes32) {
+    function hashLeaf(bytes memory _data) public view returns (bytes32) {
         return Utils.hashLeaf(_data);
     }
     function hashChildren(bytes32 left, bytes32 right) public pure returns (bytes32) {
@@ -39,7 +39,7 @@ contract UtilsMock {
         return Utils.slice(_bytes, _start, _length);
     }
 
-    function containMAddresses(address[] memory keepers, address[] memory signers, uint m) public pure returns(bool){
+    function containMAddresses(address[] memory keepers, address[] memory signers, uint m) public view returns(bool){
         return Utils.containMAddresses(keepers, signers, m);
     }
 }

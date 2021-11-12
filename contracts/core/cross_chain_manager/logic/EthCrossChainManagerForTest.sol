@@ -8,6 +8,9 @@ import "./../upgrade/UpgradableECCM.sol";
 import "./../libs/EthCrossChainUtils.sol";
 import "./../interface/IEthCrossChainManager.sol";
 import "./../interface/IEthCrossChainData.sol";
+
+import "hardhat/console.sol";
+
 contract EthCrossChainManagerForTest is IEthCrossChainManager, UpgradableECCM {
     using SafeMath for uint256;
 
@@ -130,13 +133,50 @@ contract EthCrossChainManagerForTest is IEthCrossChainManager, UpgradableECCM {
     */
     function verifyHeaderAndExecuteTx(bytes memory proof, bytes memory rawHeader, bytes memory headerProof, bytes memory curRawHeader,bytes memory headerSig) whenNotPaused public returns (bool){
         ECCUtils.Header memory header = ECCUtils.deserializeHeader(rawHeader);
+        console.log("ECCM verifyHeaderAndExecuteTx rawHeader");
+        console.logBytes(rawHeader);
+        console.log("ECCM verifyHeaderAndExecuteTx header.version %s", header.version);
+        console.log("ECCM verifyHeaderAndExecuteTx header.chainId %s", header.chainId);
+        console.log("ECCM verifyHeaderAndExecuteTx header.timestamp %s", header.timestamp);
+        console.log("ECCM verifyHeaderAndExecuteTx header.height %s", header.height);
+        console.log("ECCM verifyHeaderAndExecuteTx header.consensusData %s", header.consensusData);
+        console.log("ECCM verifyHeaderAndExecuteTx header.prevBlockHash ");
+        console.logBytes32(header.prevBlockHash);
+        console.log("ECCM verifyHeaderAndExecuteTx header.transactionsRoot");
+        console.logBytes32(header.transactionsRoot);
+        console.log("ECCM verifyHeaderAndExecuteTx header.crossStatesRoot ");
+        console.logBytes32(header.crossStatesRoot);
+        console.log("ECCM verifyHeaderAndExecuteTx header.blockRoot ");
+        console.logBytes32(header.blockRoot);
+        console.log("ECCM verifyHeaderAndExecuteTx header.consensusPayload ");
+        console.logBytes(header.consensusPayload);
+        console.log("ECCM verifyHeaderAndExecuteTx header.nextBookkeeper ");
+        console.logBytes20(header.nextBookkeeper);
+
+//        logBytes32
+//        uint32 version;
+//        uint64 chainId;
+//        uint32 timestamp;
+//        uint32 height;
+//        uint64 consensusData;
+//        bytes32 prevBlockHash;
+//        bytes32 transactionsRoot;
+//        bytes32 crossStatesRoot;
+//        bytes32 blockRoot;
+//        bytes consensusPayload;
+//        bytes20 nextBookkeeper;
+
         // Load ehereum cross chain data contract
         IEthCrossChainData eccd = IEthCrossChainData(EthCrossChainDataAddress);
         
         // Get stored consensus public key bytes of current poly chain epoch and deserialize Poly chain consensus public key bytes to address[]
         address[] memory polyChainBKs = ECCUtils.deserializeKeepers(eccd.getCurEpochConPubKeyBytes());
+        for (uint i = 0; i < polyChainBKs.length; i++) {
+            console.log("ECCM verifyHeaderAndExecuteTx polyChainBKs %s", polyChainBKs[i]);
+        }
 
         uint256 curEpochStartHeight = eccd.getCurEpochStartHeight();
+        console.log("ECCM verifyHeaderAndExecuteTx curEpochStartHeight %s", curEpochStartHeight);
 
         uint n = polyChainBKs.length;
         if (header.height >= curEpochStartHeight) {
@@ -153,10 +193,51 @@ contract EthCrossChainManagerForTest is IEthCrossChainManager, UpgradableECCM {
         }
         
         // Through rawHeader.CrossStatesRoot, the toMerkleValue or cross chain msg can be verified and parsed from proof
+        console.log("ECCM verifyHeaderAndExecuteTx merkleProve proof ");
+        console.logBytes(proof);
+        console.log("ECCM verifyHeaderAndExecuteTx merkleProve header.crossStatesRoot ");
+        console.logBytes32(header.crossStatesRoot);
         bytes memory toMerkleValueBs = ECCUtils.merkleProve(proof, header.crossStatesRoot);
+        console.log("ECCM verifyHeaderAndExecuteTx toMerkleValueBs ");
+        console.logBytes(toMerkleValueBs);
         
         // Parse the toMerkleValue struct and make sure the tx has not been processed, then mark this tx as processed
         ECCUtils.ToMerkleValue memory toMerkleValue = ECCUtils.deserializeMerkleValue(toMerkleValueBs);
+        console.log("ECCM verifyHeaderAndExecuteTx toMerkleValue.txHash ");
+        console.logBytes(toMerkleValue.txHash);
+        console.log("ECCM verifyHeaderAndExecuteTx toMerkleValue.fromChainID %s", toMerkleValue.fromChainID);
+        console.log("ECCM verifyHeaderAndExecuteTx toMerkleValue.TxParam.txHash ");
+        console.logBytes(toMerkleValue.makeTxParam.txHash);
+        console.log("ECCM verifyHeaderAndExecuteTx toMerkleValue.TxParam.crossChainId ");
+        console.logBytes(toMerkleValue.makeTxParam.crossChainId);
+        console.log("ECCM verifyHeaderAndExecuteTx toMerkleValue.TxParam.fromContract ");
+        console.logBytes(toMerkleValue.makeTxParam.fromContract);
+        console.log("ECCM verifyHeaderAndExecuteTx toMerkleValue.TxParam.toChainId %s", toMerkleValue.makeTxParam.toChainId);
+        console.log("ECCM verifyHeaderAndExecuteTx toMerkleValue.TxParam.toContract ");
+        console.logBytes(toMerkleValue.makeTxParam.toContract);
+        console.log("ECCM verifyHeaderAndExecuteTx toMerkleValue.TxParam.method ");
+        console.logBytes(toMerkleValue.makeTxParam.method);
+        console.log("ECCM verifyHeaderAndExecuteTx toMerkleValue.TxParam.args ");
+        console.logBytes(toMerkleValue.makeTxParam.args);
+
+
+//        struct ToMerkleValue {
+//    bytes  txHash;  // cross chain txhash
+//    uint64 fromChainID;
+//    TxParam makeTxParam;
+//    }
+//
+//        struct TxParam {
+//        bytes txHash; //  source chain txhash
+//        bytes crossChainId;
+//        bytes fromContract;
+//        uint64 toChainId;
+//        bytes toContract;
+//        bytes method;
+//        bytes args;
+//        }
+
+
         require(!eccd.checkIfFromChainTxExist(toMerkleValue.fromChainID, Utils.bytesToBytes32(toMerkleValue.txHash)), "the transaction has been executed!");
         require(eccd.markFromChainTxExist(toMerkleValue.fromChainID, Utils.bytesToBytes32(toMerkleValue.txHash)), "Save crosschain tx exist failed!");
         

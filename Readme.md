@@ -117,4 +117,31 @@ query balance : <code>web3.eth.getBalance(accounts[0])</code>
 
 send ether: <code>web3.eth.sendTransaction({from: accounts[0], to: accounts[1], value: web3.utils.toWei('1', "ether")})</code>
 
+---
 
+## Hardhat test instruction
+
+#### branch
+
+ele_testnet
+
+#### install hardhat env
+npm install --save-dev hardhat
+
+npm install --save-dev @nomiclabs/hardhat-waffle ethereum-waffle chai @nomiclabs/hardhat-ethers ethers
+
+
+### install dependency
+npm install
+
+### config test private key
+config in hardhat.config.js
+
+### star hardhat node
+npx hardhat node
+
+### execute test
+npx hardhat test hardhatTests/EthCrossChainMangerTest.js
+
+###
+hardhat console.log to print test info
